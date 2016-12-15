@@ -6,18 +6,29 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
+import javax.swing.SwingUtilities;
 
 /** 
  * Class for creating app GUI
@@ -115,6 +126,19 @@ public class GUI extends JFrame {
 		separatorH = new JSeparator(JSeparator.HORIZONTAL);
 		separatorH.setPreferredSize(new Dimension(2,2));
 		
+		/** Create JMenuBar & JMenuItems */
+		JMenuBar menu = new JMenuBar();
+		JMenu menuFile = new JMenu("File");
+		menu.add(menuFile);
+		
+		JMenuItem openFile = new JMenuItem("Open File");
+		openFile.addActionListener(new openFileListener());
+		menuFile.add(openFile);
+		
+		JMenuItem saveFile = new JMenuItem("Save to File");
+		saveFile.addActionListener(new saveFileListener());
+		menuFile.add(saveFile);
+
 		/** Add items to their panels */
 		tablePanel.add(getTable().getTableHeader());
 		tablePanel.add(scrollPane);
@@ -182,6 +206,7 @@ public class GUI extends JFrame {
 //		});
 		
 		/** Activate Main Frame and its properties */
+		mainFrame.setJMenuBar(menu);
 		mainFrame.add(mainPanel);
 		mainFrame.setBounds(50, 50, 0, 0);
 		mainFrame.setResizable(false);
@@ -339,4 +364,79 @@ public class GUI extends JFrame {
 			Data.sortPersonsByNameZA(); 
 		}
 	 }
+	 
+	 public class saveFileListener implements ActionListener {
+			public void actionPerformed(ActionEvent zd) {
+				
+				FileOutputStream fout = null;
+				ObjectOutputStream oos = null;
+				
+				JFileChooser fileChooser = new JFileChooser();
+				fileChooser.setCurrentDirectory(new File("C:/"));
+				fileChooser.showSaveDialog(mainFrame);
+				
+				 try{
+					 
+		             fout = new FileOutputStream(fileChooser.getSelectedFile());
+		             oos = new ObjectOutputStream(fout);
+		             oos.writeObject(Data.persons);
+		             oos.close();
+		             
+		         } catch (Exception ex) {
+		        	 AddressBook.setWarningMsg(ex.getMessage());
+		         
+		         } finally {
+		             if(oos != null){
+		                 try {
+							oos.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+		             } 
+		         }
+			}
+		}
+	 
+	 public class openFileListener implements ActionListener {
+			@SuppressWarnings("unchecked")
+			public void actionPerformed(ActionEvent zd) {
+				
+				FileInputStream fis = null;
+				ObjectInputStream ois = null;
+				
+				JFileChooser fileChooser = new JFileChooser();
+				fileChooser.setCurrentDirectory(new File("C:/"));
+				fileChooser.showSaveDialog(mainFrame);
+				
+				try {
+				    fis = new FileInputStream(fileChooser.getSelectedFile());
+				    ois = new ObjectInputStream(fis);
+				    Data.persons = (ArrayList<Person>) ois.readObject(); 
+			        ois.close();
+			        
+			        /** Delete Current Window and build new GUI window after 
+			         * open data from file */
+			        AddressBook.isThreadRun = true;
+			        
+			        while(AddressBook.isThreadRun){
+				        mainFrame.dispose();
+				        SwingUtilities.invokeLater(() -> new GUI());
+				        AddressBook.isThreadRun = false;
+			        }
+			        
+				} catch (Exception e) {
+					AddressBook.setWarningMsg(e.getMessage());
+				
+				} finally {
+				    if(ois != null){
+				        try {
+							ois.close();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+				    } 
+				}
+			}
+		}
+	 
 }

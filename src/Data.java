@@ -36,7 +36,7 @@ public class Data {
 		 ObjectOutputStream oos = null;
 		 
          try{
-             fout = new FileOutputStream("C:\\data.ser", false);
+             fout = new FileOutputStream("C:\\AddressBookData.ser", false);
              oos = new ObjectOutputStream(fout);
              oos.writeObject(persons);
              oos.close();
@@ -58,7 +58,7 @@ public class Data {
 		ObjectInputStream ois = null;
 		
 		try {
-		    fis = new FileInputStream("C:\\data.ser");
+		    fis = new FileInputStream("C:\\AddressBookData.ser");
 		    ois = new ObjectInputStream(fis);
 		    persons = (ArrayList<Person>) ois.readObject(); 
             ois.close();
